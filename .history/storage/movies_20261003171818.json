@@ -54,12 +54,5 @@
         "genre": "Action",
         "rating": 6.7,
         "year": 2013
-    },
-    "9": {
-        "id": 9,
-        "title": "Baywatch",
-        "genre": "Comedy",
-        "rating": 9.2,
-        "year": 2003
     }
 }

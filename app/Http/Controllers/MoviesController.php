@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
+use App\Models\Movie;
 
 class MoviesController extends Controller
 {
@@ -12,24 +12,31 @@ class MoviesController extends Controller
      */
     public function index(Request $request) 
     {
-        $genre = $request->query('genre', 'all');
-        $year  = $request->query('year', 'all');
+        $movies = Movie::all();
+        $genre  = 'all';
+        $year   = 'all';
 
-        $movies = $this->movies();
+        return view('movies.index', compact('movies', 'genre', 'year'));
+    
+    
+        // $genre = $request->query('genre', 'all');
+        // $year  = $request->query('year', 'all');
 
-        if ($genre !== 'all') {
-            $movies = array_filter($movies, fn($m) => $m['genre'] === $genre);
-        }
+        // $movies = $this->movies();
 
-        if ($year !== 'all') {
-            $movies = array_filter($movies, fn($m) => $m['year'] == $year);
-        }
+        // if ($genre !== 'all') {
+        //     $movies = array_filter($movies, fn($m) => $m['genre'] === $genre);
+        // }
 
-        return view('movies.index', [
-            'movies' => $movies,
-            'genre'  => $genre,
-            'year'   => $year,
-        ]);
+        // if ($year !== 'all') {
+        //     $movies = array_filter($movies, fn($m) => $m['year'] == $year);
+        // }
+
+        // return view('movies.index', [
+        //     'movies' => $movies,
+        //     'genre'  => $genre,
+        //     'year'   => $year,
+        // ]);
         
     }
 
@@ -77,13 +84,17 @@ class MoviesController extends Controller
      */
     public function show($id)
     {
-       $movies = $this->movies();
+        $movie = Movie::findOrFail($id);
+        return view('movies.show', compact('movie'));
+    
+    
+    //    $movies = $this->movies();
 
-        if (!isset($movies[$id])) {
-            abort(404);
-        }
+    //     if (!isset($movies[$id])) {
+    //         abort(404);
+    //     }
 
-        return view('movies.show', ['movie' => $movies[$id]]);
+    //     return view('movies.show', ['movie' => $movies[$id]]);
     }
 
     /**

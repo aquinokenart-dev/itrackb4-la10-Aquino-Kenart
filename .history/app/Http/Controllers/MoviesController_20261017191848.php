@@ -3,15 +3,18 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Movie;
 
-class MovieController extends Controller
+class MoviesController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request) 
     {
-        return view('movies.index', ['movies' => $this->movies()]);
+        $movies = Movie::all();
+        return view('movies.index', compact('movies'));
+        
     }
 
     /**
@@ -19,7 +22,7 @@ class MovieController extends Controller
      */
     public function create()
     {
-        //
+        return view('movies.create');
     }
 
     /**
@@ -27,7 +30,30 @@ class MovieController extends Controller
      */
     public function store(Request $request)
     {
-        //
+    $validated = $request->validate([
+        'title'  => 'required|string|max:100',
+        'genre'  => 'required|in:Action,Comedy,Fantasy',
+        'rating' => 'required|numeric|min:0|max:10',
+        'year'   => 'required|integer|min:1900|max:2030',
+    ]);
+
+    $movies = $this->movies();
+
+    $nextId = empty($movies) ? 1 : max(array_keys($movies)) + 1;
+
+    $movies[$nextId] = [
+        'id'     => $nextId,
+        'title'  => $validated['title'],
+        'genre'  => $validated['genre'],
+        'rating' => (float) $validated['rating'],
+        'year'   => (int) $validated['year'],
+    ];
+
+    $this->saveMovies($movies);
+
+    return redirect()
+        ->route('movies.index')
+        ->with('success', 'Movie added successfully!');
     }
 
     /**
@@ -35,10 +61,12 @@ class MovieController extends Controller
      */
     public function show($id)
     {
-        $movies = $this->movies();
+       $movies = $this->movies();
+
         if (!isset($movies[$id])) {
             abort(404);
         }
+
         return view('movies.show', ['movie' => $movies[$id]]);
     }
 
@@ -67,7 +95,7 @@ class MovieController extends Controller
     }
 
     /**
-     * Filter movies by genre — extra method beyond the seven (A6).
+     * Filter movies by genre.
      */
     public function filter($genre = null)
     {
@@ -81,18 +109,18 @@ class MovieController extends Controller
         return view('movies.filter', ['movies' => $movies, 'activeGenre' => $genre]);
     }
 
-    /**
-     * Movie data helper — stays private (A5).
-     */
     private function movies()
     {
-        return [
-            1 => ['id' => 1, 'title' => 'Spider-Man', 'price' => 250, 'genre' => 'Action', 'rating' => 9.1, 'year' => 2002],
-            2 => ['id' => 2, 'title' => 'Gagamboy', 'price' => 200, 'genre' => 'Comedy', 'rating' => 8.5, 'year' => 2004],
-            3 => ['id' => 3, 'title' => 'Harry Potter', 'price' => 300, 'genre' => 'Fantasy', 'rating' => 9.7, 'year' => 2001],
-            4 => ['id' => 4, 'title' => 'Grown Ups', 'price' => 250, 'genre' => 'Comedy', 'rating' => 8.6, 'year' => 2010],
-            5 => ['id' => 5, 'title' => 'Grown Ups 2', 'price' => 250, 'genre' => 'Comedy', 'rating' => 8.9, 'year' => 2013],
-            6 => ['id' => 6, 'title' => 'Avengers: Endgame', 'price' => 350, 'genre' => 'Action', 'rating' => 9.8, 'year' => 2019],
-        ];
+        $path = storage_path('movies.json');
+
+        return json_decode(file_get_contents($path), true);
     }
+
+    private function saveMovies(array $movies){
+        file_put_contents(
+            storage_path('movies.json'),
+            json_encode($movies, JSON_PRETTY_PRINT)
+        );
+    }
+
 }
