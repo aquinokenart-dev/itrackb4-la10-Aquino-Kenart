@@ -19,15 +19,15 @@
         </div>
 
         <div class="mb-3">
-            <label for="genre" class="form-label">Genre</label>
-            <select name="genre" id="genre"
-                    class="form-select @error('genre') is-invalid @enderror">
+            <label for="genre_id" class="form-label">Genre</label>
+            <select name="genre_id" id="genre_id"
+                    class="form-select @error('genre_id') is-invalid @enderror">
                 <option value="">Select genre</option>
-                <option value="Action"  @selected(old('genre') === 'Action')>Action</option>
-                <option value="Comedy"  @selected(old('genre') === 'Comedy')>Comedy</option>
-                <option value="Fantasy" @selected(old('genre') === 'Fantasy')>Fantasy</option>
+                @foreach ($genres as $g)
+                    <option value="{{ $g->id }}" @selected(old('genre_id') == $g->id)>{{ $g->name }}</option>
+                @endforeach
             </select>
-            @error('genre')
+            @error('genre_id')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
         </div>

@@ -2,152 +2,63 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Genre;
 use App\Models\Movie;
+use Illuminate\Http\Request;
 
 class MoviesController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index(Request $request) 
+    public function index(Request $request)
     {
-        $movies = Movie::all();
-        $genre  = 'all';
-        $year   = 'all';
+            $genre = $request->query('genre');
+            $year = $request->query('year');
 
-        return view('movies.index', compact('movies', 'genre', 'year'));
-    
-    
-        // $genre = $request->query('genre', 'all');
-        // $year  = $request->query('year', 'all');
+            $genres = Genre::all();
 
-        // $movies = $this->movies();
+            \Illuminate\Support\Facades\DB::enableQueryLog();
 
-        // if ($genre !== 'all') {
-        //     $movies = array_filter($movies, fn($m) => $m['genre'] === $genre);
-        // }
+            $query = Movie::with('genre');
 
-        // if ($year !== 'all') {
-        //     $movies = array_filter($movies, fn($m) => $m['year'] == $year);
-        // }
+            if ($genre) {
+                $query = $query->where('genre_id', $genre);
+            }
 
-        // return view('movies.index', [
-        //     'movies' => $movies,
-        //     'genre'  => $genre,
-        //     'year'   => $year,
-        // ]);
-        
+            if ($year) {
+                $query = $query->where('year', $year);
+            }
+
+            $movies = $query->get();
+
+            return view('movies.index', compact('movies', 'genre', 'year', 'genres'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        return view('movies.create');
+        $genres = Genre::all();
+
+        return view('movies.create', compact('genres'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-    $validated = $request->validate([
-        'title'  => 'required|string|max:100',
-        'genre'  => 'required|in:Action,Comedy,Fantasy',
-        'rating' => 'required|numeric|min:0|max:10',
-        'year'   => 'required|integer|min:1900|max:2030',
-    ]);
+        $validated = $request->validate([
+            'title'    => 'required|string|max:100',
+            'genre_id' => 'required|exists:genres,id',
+            'rating'   => 'required|numeric|min:0|max:10',
+            'year'     => 'required|integer|min:1900|max:2030',
+        ]);
 
-    $movies = $this->movies();
+        Movie::create($validated);
 
-    $nextId = empty($movies) ? 1 : max(array_keys($movies)) + 1;
-
-    $movies[$nextId] = [
-        'id'     => $nextId,
-        'title'  => $validated['title'],
-        'genre'  => $validated['genre'],
-        'rating' => (float) $validated['rating'],
-        'year'   => (int) $validated['year'],
-    ];
-
-    $this->saveMovies($movies);
-
-    return redirect()
-        ->route('movies.index')
-        ->with('success', 'Movie added successfully!');
+        return redirect()
+            ->route('movies.index')
+            ->with('success', 'Movie added successfully!');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
         $movie = Movie::findOrFail($id);
+
         return view('movies.show', compact('movie'));
-    
-    
-    //    $movies = $this->movies();
-
-    //     if (!isset($movies[$id])) {
-    //         abort(404);
-    //     }
-
-    //     return view('movies.show', ['movie' => $movies[$id]]);
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
-
-    /**
-     * Filter movies by genre.
-     */
-    public function filter($genre = null)
-    {
-        $movies = $this->movies();
-        if ($genre) {
-            $movies = array_filter($movies, function ($movie) use ($genre) {
-                return $movie['genre'] === $genre;
-            });
-        }
-
-        return view('movies.filter', ['movies' => $movies, 'activeGenre' => $genre]);
-    }
-
-    private function movies()
-    {
-        $path = storage_path('movies.json');
-
-        return json_decode(file_get_contents($path), true);
-    }
-
-    private function saveMovies(array $movies){
-        file_put_contents(
-            storage_path('movies.json'),
-            json_encode($movies, JSON_PRETTY_PRINT)
-        );
-    }
-
 }

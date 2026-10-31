@@ -5,40 +5,38 @@
 @section('content')
     <h2>All Movies</h2>
 
-        <div class="mb-3">
-    <a href="{{ route('movies.create') }}" class="btn btn-success">Add New Movie</a>
+    <div class="mb-3">
+        <a href="{{ route('movies.create') }}" class="btn btn-success">Add New Movie</a>
     </div>
 
     <p>
         Active filters:
-        @if ($genre === 'all' && $year === 'all')
+        @if (!$genre && !$year)
             None (showing everything)
         @else
-            @if ($genre !== 'all')
-                <span class="badge bg-info text-dark">Genre: {{ $genre }}</span>
+            @if ($genre)
+                <span class="badge bg-info text-dark">Genre: {{ $genres->firstWhere('id', $genre)?->name }}</span>
             @endif
-            @if ($year !== 'all')
+            @if ($year)
                 <span class="badge bg-info text-dark">Year: {{ $year }}</span>
             @endif
         @endif
     </p>
 
-
     <div class="mb-2">
         <strong>Genre:</strong>
-        <a href="{{ route('movies.index', ['genre' => 'Action',  'year' => $year]) }}" class="btn btn-sm btn-outline-primary">Action</a>
-        <a href="{{ route('movies.index', ['genre' => 'Comedy',  'year' => $year]) }}" class="btn btn-sm btn-outline-primary">Comedy</a>
-        <a href="{{ route('movies.index', ['genre' => 'Fantasy', 'year' => $year]) }}" class="btn btn-sm btn-outline-primary">Fantasy</a>
+        @foreach ($genres as $g)
+            <a href="{{ route('movies.index', ['genre' => $g->id, 'year' => $year]) }}"
+               class="btn btn-sm btn-outline-primary">{{ $g->name }}</a>
+        @endforeach
     </div>
 
     <div class="mb-3">
         <strong>Year:</strong>
-        <a href="{{ route('movies.index', ['genre' => $genre, 'year' => 2001]) }}" class="btn btn-sm btn-outline-primary">2001</a>
-        <a href="{{ route('movies.index', ['genre' => $genre, 'year' => 2002]) }}" class="btn btn-sm btn-outline-primary">2002</a>
-        <a href="{{ route('movies.index', ['genre' => $genre, 'year' => 2004]) }}" class="btn btn-sm btn-outline-primary">2004</a>
-        <a href="{{ route('movies.index', ['genre' => $genre, 'year' => 2010]) }}" class="btn btn-sm btn-outline-primary">2010</a>
-        <a href="{{ route('movies.index', ['genre' => $genre, 'year' => 2013]) }}" class="btn btn-sm btn-outline-primary">2013</a>
-        <a href="{{ route('movies.index', ['genre' => $genre, 'year' => 2019]) }}" class="btn btn-sm btn-outline-primary">2019</a>
+        @foreach ([2008, 2010, 2019, 2022] as $y)
+            <a href="{{ route('movies.index', ['genre' => $genre, 'year' => $y]) }}"
+               class="btn btn-sm btn-outline-primary">{{ $y }}</a>
+        @endforeach
 
         <a href="{{ route('movies.index') }}" class="btn btn-sm btn-secondary ms-3">Clear all filters</a>
     </div>
@@ -57,10 +55,10 @@
             @forelse ($movies as $movie)
                 <tr>
                     <td>{{ $loop->iteration }}</td>
-                    <td><a href="{{ route('movies.show', $movie['id']) }}">{{ $movie['title'] }}</a></td>
-                    <td>{{ $movie['genre'] }}</td>
-                    <td>{{ $movie['rating'] }}</td>
-                    <td>{{ $movie['year'] }}</td>
+                    <td><a href="{{ route('movies.show', $movie->id) }}">{{ $movie->title }}</a></td>
+                    <td>{{ $movie->genre->name }}</td>
+                    <td>{{ $movie->rating }}</td>
+                    <td>{{ $movie->year }}</td>
                 </tr>
             @empty
                 <tr>
@@ -69,4 +67,5 @@
             @endforelse
         </tbody>
     </table>
+    <p>Queries: {{ count(\Illuminate\Support\Facades\DB::getQueryLog()) }}</p>
 @endsection
